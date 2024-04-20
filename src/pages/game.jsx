@@ -10,6 +10,7 @@ const ERROR = "error";
 const ACTIVE = "active";
 const GAME_OVER = "game_over";
 const BOARD_SIZE = "board_size";
+const CLIENT_READY = "client_ready";
 
 export function Game() {
     const location = useLocation();
@@ -38,7 +39,11 @@ export function Game() {
             console.log("yesss return");
             return;
         }
-        console.log("not return");
+        socket.send(
+            JSON.stringify({
+                type: CLIENT_READY,
+            })
+        );
         socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
             console.log("message here = ", message);
@@ -57,6 +62,7 @@ export function Game() {
                     setStarted(true);
                     setWaiting(false);
                     setBoard(message.payload.board);
+                    setSquareSize(message.payload.square_size);
                     setOpponent(message.payload.opponent);
                     toast.success(
                         `You are playing with ${message.payload.opponent}`
