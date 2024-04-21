@@ -1,8 +1,9 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useSocket } from "../hooks/useSocket";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+// import { useSocket } from "../hooks/useSocket";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Keys } from "../components/Keys";
+import { useSocketContext } from "../context/useSocket";
 
 const INIT = "init";
 const MOVE = "move";
@@ -12,10 +13,16 @@ const GAME_OVER = "game_over";
 const BOARD_SIZE = "board_size";
 const CLIENT_READY = "client_ready";
 
+
+
 export function Game() {
     const location = useLocation();
     const query = new URLSearchParams(location.search);
     const name = query.get("name");
+
+    const { socket } = useSocketContext();
+
+    // console.log("socket here === ", socket);
 
     const navigate = useNavigate();
 
@@ -26,17 +33,14 @@ export function Game() {
     const [board, setBoard] = useState(null);
     const [squareSize, setSquareSize] = useState(null);
 
-    const { socket } = useSocket(name);
-    console.log(socket);
-
     const [started, setStarted] = useState(false);
 
-    console.log("opponent = ", opponent);
-    console.log("board = ", board);
+    // console.log("opponent = ", opponent);
+    // console.log("board = ", board);
 
     useEffect(() => {
         if (!socket) {
-            console.log("yesss return");
+            // console.log("yesss return");
             return;
         }
         socket.send(
@@ -46,7 +50,7 @@ export function Game() {
         );
         socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
-            console.log("message here = ", message);
+            // console.log("message here = ", message);
 
             switch (message.type) {
                 case BOARD_SIZE:
@@ -62,7 +66,7 @@ export function Game() {
                     setStarted(true);
                     setWaiting(false);
                     setBoard(message.payload.board);
-                    setSquareSize(message.payload.square_size);
+                    // setSquareSize(message.payload.square_size);
                     setOpponent(message.payload.opponent);
                     toast.success(
                         `You are playing with ${message.payload.opponent}`
@@ -82,10 +86,16 @@ export function Game() {
                     break;
             }
         };
+
+        return () => {
+            console.log("cleanup");
+            socket.close();
+        };
     }, [socket, navigate]);
 
-    console.log("board = ", board);
-    console.log("size = ", squareSize);
+    if (!socket) {
+        return <Navigate to={"/"} />;
+    }
 
     return (
         <div className="h-screen mx-auto gap-4 justify-center bg-[#1f1f1f] flex">

@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 /* eslint-disable react/prop-types */
 const UP = "UP";
 const DOWN = "DOWN";
@@ -5,7 +7,26 @@ const LEFT = "LEFT";
 const RIGHT = "RIGHT";
 const MOVE = "move";
 
+function useKeys(action) {
+    useEffect(() => {
+        document.addEventListener("keyup", action);
+        return () => document.removeEventListener("keyup", action);
+    }, [action]);
+}
+
 export function Keys({ socket }) {
+    function handleKeyPress(e) {
+        if (e.key === "w" || e.key === "ArrowUp") {
+            handleMove(UP);
+        } else if (e.key === "s" || e.key === "ArrowDown") {
+            handleMove(DOWN);
+        } else if (e.key === "d" || e.key === "ArrowRight") {
+            handleMove(RIGHT);
+        } else if (e.key === "a" || e.key === "ArrowLeft") {
+            handleMove(LEFT);
+        }
+    }
+
     function handleMove(direction) {
         socket.send(
             JSON.stringify({
@@ -14,6 +35,9 @@ export function Keys({ socket }) {
             })
         );
     }
+
+    useKeys(handleKeyPress);
+
     return (
         <div className="flex flex-col mt-auto justify-end items-center gap-5">
             <button
