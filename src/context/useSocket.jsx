@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 const SocketContext = createContext();
@@ -10,37 +10,40 @@ function SocketProvider({ children }) {
 
     let connectionError = false;
 
-    async function connectToServer(username) {
-        setConnecting(true);
-        connectionError = false;
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        const ws = new WebSocket("ws://localhost:8000?name=" + username);
+    const connectToServer = useMemo(() => {
+        return (name) => {
+            setConnecting(true);
+            connectionError = false;
 
-        ws.onopen = () => {
-            console.log("connected.");
-            toast.success("You are connected to the server");
+            // await new Promise((resolve) => setTimeout(resolve, 3000));
+            const ws = new WebSocket("ws://localhost:8000?name=" + name);
 
-            setSocket(ws);
-            setConnecting(false);
+            ws.onopen = () => {
+                console.log("connected.");
+                toast.success("You are connected to the server");
+
+                setSocket(ws);
+                setConnecting(false);
+            };
+
+            ws.onclose = (s) => {
+                if (connectionError) {
+                    return;
+                }
+                toast.success("You got disconnected");
+                console.log("disconnected. ", s);
+                setSocket(null);
+            };
+
+            ws.onerror = (error) => {
+                console.error("WebSocket error:", error);
+                toast.error("Error while connecting to the Server");
+                setSocket(null);
+                connectionError = true;
+                setConnecting(false);
+            };
         };
-
-        ws.onclose = (s) => {
-            if (connectionError) {
-                return;
-            }
-            toast.success("You got disconnected");
-            console.log("disconnected. ", s);
-            setSocket(null);
-        };
-
-        ws.onerror = (error) => {
-            console.error("WebSocket error:", error);
-            toast.error("Error while connecting to the Server");
-            setSocket(null);
-            connectionError = true;
-            setConnecting(false);
-        };
-    }
+    }, []);
 
     return (
         <SocketContext.Provider value={{ connecting, socket, connectToServer }}>

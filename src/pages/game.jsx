@@ -1,9 +1,9 @@
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
-// import { useSocket } from "../hooks/useSocket";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+
 import { Keys } from "../components/Keys";
 import { useSocketContext } from "../context/useSocket";
+import { useUser } from "../context/useUser";
 
 const INIT = "init";
 const MOVE = "move";
@@ -13,36 +13,32 @@ const GAME_OVER = "game_over";
 const BOARD_SIZE = "board_size";
 const CLIENT_READY = "client_ready";
 
-
-
 export function Game() {
-    const location = useLocation();
-    const query = new URLSearchParams(location.search);
-    const name = query.get("name");
+    const {
+        user: { name },
+    } = useUser();
 
-    const { socket } = useSocketContext();
-
-    // console.log("socket here === ", socket);
-
-    const navigate = useNavigate();
+    const { socket, connectToServer } = useSocketContext();
 
     const [message, setMessage] = useState("");
     const [opponent, setOpponent] = useState("");
     const [waiting, setWaiting] = useState(false);
+    const [started, setStarted] = useState(false);
 
     const [board, setBoard] = useState(null);
     const [squareSize, setSquareSize] = useState(null);
 
-    const [started, setStarted] = useState(false);
-
-    // console.log("opponent = ", opponent);
-    // console.log("board = ", board);
+    useEffect(() => {
+        connectToServer(name);
+    }, [connectToServer, name]);
 
     useEffect(() => {
         if (!socket) {
-            // console.log("yesss return");
+            console.log("yesss return");
             return;
         }
+
+        console.log("here");
         socket.send(
             JSON.stringify({
                 type: CLIENT_READY,
@@ -50,7 +46,6 @@ export function Game() {
         );
         socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
-            // console.log("message here = ", message);
 
             switch (message.type) {
                 case BOARD_SIZE:
@@ -79,7 +74,9 @@ export function Game() {
                     break;
                 case GAME_OVER:
                     toast.success(message.payload.message);
-                    navigate("/");
+                    setBoard(message.payload.board);
+                    setOpponent("");
+                    setWaiting(true);
                     break;
                 case ERROR:
                     toast.error(message.payload.message);
@@ -91,15 +88,11 @@ export function Game() {
             console.log("cleanup");
             socket.close();
         };
-    }, [socket, navigate]);
-
-    if (!socket) {
-        return <Navigate to={"/"} />;
-    }
+    }, [socket]);
 
     return (
-        <div className="h-screen mx-auto gap-4 justify-center bg-[#1f1f1f] flex">
-            <div className="m-4 p-4 shadow-md flex rounded-xl flex-wrap w-[1000px] h-[700px] bg-[#323248] ">
+        <div className="h-screen w-screen gap-2 justify-center items-center bg-[#1f1f1f] flex">
+            <div className="m-4 p-4 shadow-md flex rounded-xl flex-wrap w-[20000px] h-[670px] bg-[#323248] ">
                 {socket &&
                     board &&
                     board.map((row, i) => {
@@ -127,13 +120,13 @@ export function Game() {
                         });
                     })}
             </div>
-            <div className="mt-4 flex flex-col p-10 w-1/4 h-[700px]">
+            <div className="mt-4 flex flex-col p-2 h-[670px]">
                 <div className="flex flex-col items-start gap-4">
-                    <h1 className="text-3xl font-semibold text-white">
-                        Welcome 👋, {name}
+                    <h1 className="text-xl font-kanit text-white">
+                        🕹️ Hey, {name}
                     </h1>
                     {!socket && (
-                        <p className="text-lg text-[#f5a64b] font-semibold">
+                        <p className="text-lg text-[#f5a64b] font-kanit font-semibold">
                             {" "}
                             You are not connected to the server. Refresh to
                             reconnect
@@ -148,7 +141,7 @@ export function Game() {
                                     })
                                 );
                             }}
-                            className="text-xl bg-green-600 text-white hover:bg-green-800 px-8 py-2 rounded-md"
+                            className="text-xl bg-green-600 text-white hover:bg-green-800 px-6 py-1 font-kanit rounded-md"
                         >
                             Play
                         </button>
@@ -157,15 +150,15 @@ export function Game() {
                     <div className="flex flex-col mt-2 gap-2">
                         {started && !waiting && (
                             <p className="text-lg text-white font-semibold">
-                                <span className="text-[#b0aeae] mr-4">
+                                <span className="text-[#b0aeae] font-kanit mr-4">
                                     Playing with:
                                 </span>{" "}
                                 {opponent}
                             </p>
                         )}
 
-                        {started && waiting && (
-                            <p className="text-xl text-[#f5a64b] font-semibold">
+                        {started && socket && waiting && (
+                            <p className="text-xl text-[#f5a64b] font-kanit font-semibold">
                                 Waiting for the other user to connect ...
                             </p>
                         )}
