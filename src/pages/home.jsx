@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useUser } from "../context/useUser";
 
+const BACKEND = import.meta.env.VITE_BACKEND || "http://localhost:3000";
+
 export function Home() {
     const { user } = useUser();
     return (
@@ -21,10 +23,7 @@ export function Home() {
                 {!user && (
                     <button
                         onClick={() =>
-                            window.open(
-                                "http://127.0.0.1:3000/auth/google",
-                                "_self"
-                            )
+                            window.open(`${BACKEND}/auth/google`, "_self")
                         }
                         className="text-xl bg-green-600 text-white hover:bg-green-800 px-2 py-4"
                     >

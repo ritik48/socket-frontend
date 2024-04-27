@@ -4,6 +4,10 @@ import toast from "react-hot-toast";
 
 const SocketContext = createContext();
 
+const SOCKET_BACKEND =
+    import.meta.env.VITE_SOCKET_BACKEND || "ws://localhost:3000";
+console.log(SOCKET_BACKEND);
+
 function SocketProvider({ children }) {
     const [socket, setSocket] = useState(null);
     const [connecting, setConnecting] = useState(false);
@@ -16,7 +20,7 @@ function SocketProvider({ children }) {
             connectionError = false;
 
             // await new Promise((resolve) => setTimeout(resolve, 3000));
-            const ws = new WebSocket("ws://localhost:8000?name=" + name);
+            const ws = new WebSocket(`${SOCKET_BACKEND}/?name=${name}`);
 
             ws.onopen = () => {
                 console.log("connected.");

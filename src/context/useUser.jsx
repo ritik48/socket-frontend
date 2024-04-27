@@ -2,6 +2,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+const BACKEND = import.meta.env.VITE_BACKEND;
+
 const UserContext = createContext();
 
 function UserProvider({ children }) {
@@ -11,7 +13,7 @@ function UserProvider({ children }) {
     useEffect(() => {
         async function fetchUser() {
             try {
-                const res = await fetch("http://localhost:3000/user", {
+                const res = await fetch(`${BACKEND}/user`, {
                     credentials: "include",
                 });
 
@@ -31,7 +33,7 @@ function UserProvider({ children }) {
     }, []);
 
     async function logoutUser() {
-        const res = await fetch("http://localhost:3000/user/logout", {
+        const res = await fetch(`${BACKEND}/user/logout`, {
             method: "POST",
             credentials: "include",
         });
