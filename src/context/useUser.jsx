@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const BACKEND = import.meta.env.VITE_BACKEND;
+const BACKEND = import.meta.env.VITE_BACKEND || "http://localhost:3000";
 
 const UserContext = createContext();
 
