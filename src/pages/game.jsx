@@ -18,7 +18,7 @@ export function Game() {
         user: { name },
     } = useUser();
 
-    const { socket, connectToServer } = useSocketContext();
+    const { socket, connectToServer, connecting } = useSocketContext();
 
     const [message, setMessage] = useState("");
     const [opponent, setOpponent] = useState("");
@@ -125,11 +125,17 @@ export function Game() {
                     <h1 className="text-xl font-kanit text-white">
                         🕹️ Hey, {name}
                     </h1>
-                    {!socket && (
+                    {!socket && !connecting && (
                         <p className="text-lg text-[#f5a64b] font-kanit font-semibold">
                             {" "}
                             You are not connected to the server. Refresh to
                             reconnect
+                        </p>
+                    )}
+                    {!socket && connecting && (
+                        <p className="text-lg text-[#f5a64b] font-kanit font-semibold">
+                            {" "}
+                            Connecting to game...
                         </p>
                     )}
                     {!started && socket && (
