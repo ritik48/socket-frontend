@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { RxExit } from "react-icons/rx";
 
 import { Keys } from "../components/Keys";
 import { useSocketContext } from "../context/useSocket";
 import { useUser } from "../context/useUser";
+import { Link } from "react-router-dom";
 
 const INIT = "init";
 const MOVE = "move";
-const ERROR = "error";
+// const ERROR = "error";
 const ACTIVE = "active";
 const GAME_OVER = "game_over";
 const BOARD_SIZE = "board_size";
@@ -20,8 +22,8 @@ export function Game() {
 
     const { socket, connectToServer, connecting } = useSocketContext();
 
-    const [message, setMessage] = useState("");
-    const [opponent, setOpponent] = useState("");
+    // const [message, setMessage] = useState("");
+    const [opponent, setOpponent] = useState(null);
     const [waiting, setWaiting] = useState(false);
     const [started, setStarted] = useState(false);
 
@@ -34,11 +36,9 @@ export function Game() {
 
     useEffect(() => {
         if (!socket) {
-            console.log("yesss return");
             return;
         }
 
-        console.log("here");
         socket.send(
             JSON.stringify({
                 type: CLIENT_READY,
@@ -64,23 +64,23 @@ export function Game() {
                     // setSquareSize(message.payload.square_size);
                     setOpponent(message.payload.opponent);
                     toast.success(
-                        `You are playing with ${message.payload.opponent}`
+                        `You are playing with ${message.payload.opponent.username}`
                     );
-                    setMessage(message.payload.message);
+                    // setMessage(message.payload.message);
                     break;
                 case MOVE:
                     setBoard(message.payload.board);
-                    setMessage(message.payload.message);
+                    // setMessage(message.payload.message);
                     break;
                 case GAME_OVER:
                     toast.success(message.payload.message);
                     setBoard(message.payload.board);
-                    setOpponent("");
+                    setOpponent(null);
                     setWaiting(true);
                     break;
-                case ERROR:
-                    toast.error(message.payload.message);
-                    break;
+                // case ERROR:
+                //     toast.error(message.payload.message);
+                //     break;
             }
         };
 
@@ -109,7 +109,7 @@ export function Game() {
                                     {item !== "0" && (
                                         <div
                                             className={`w-2/3 h-2/3 rounded-lg ${
-                                                item === opponent
+                                                item === opponent.id
                                                     ? "bg-red-500"
                                                     : "bg-green-500"
                                             }`}
@@ -122,9 +122,14 @@ export function Game() {
             </div>
             <div className="mt-4 flex flex-col p-2 h-[670px]">
                 <div className="flex flex-col items-start gap-4">
-                    <h1 className="text-xl font-kanit text-white">
-                        🕹️ Hey, {name}
-                    </h1>
+                    <div className="flex items-center w-full justify-between">
+                        <h1 className="text-xl font-kanit text-white">
+                            🕹️ Hey, {name}
+                        </h1>
+                        <Link className="text-white hover:text-[#a09f9f]" to={"/"}>
+                            <RxExit size={20} />
+                        </Link>
+                    </div>
                     {!socket && !connecting && (
                         <p className="text-lg text-[#f5a64b] font-kanit font-semibold">
                             {" "}
@@ -157,9 +162,9 @@ export function Game() {
                         {started && !waiting && (
                             <p className="text-lg text-white font-semibold">
                                 <span className="text-[#b0aeae] font-kanit mr-4">
-                                    Playing with:
-                                </span>{" "}
-                                {opponent}
+                                    Playing with :
+                                </span>
+                                {opponent.username}
                             </p>
                         )}
 
@@ -168,9 +173,9 @@ export function Game() {
                                 Waiting for the other user to connect ...
                             </p>
                         )}
-                        <p className="text-lg text-white font-semibold">
+                        {/* <p className="text-lg text-white font-semibold">
                             {message}
-                        </p>
+                        </p> */}
                     </div>
                 </div>
 

@@ -33,17 +33,26 @@ function UserProvider({ children }) {
     }, []);
 
     async function logoutUser() {
-        const res = await fetch(`${BACKEND}/user/logout`, {
-            method: "POST",
-            credentials: "include",
-        });
-        const data = await res.json();
+        try {
+            setLoading(true);
+            const res = await fetch(`${BACKEND}/user/logout`, {
+                method: "POST",
+                credentials: "include",
+            });
+            const data = await res.json();
 
-        if (!res.ok) {
-            console.log(data);
-            throw new Error("Error logging out");
+            if (!res.ok) {
+                toast.error("Error logging out.");
+                console.log(data);
+                throw new Error("Error logging out");
+            }
+            toast.success("You were logged out.");
+            setUser(null);
+        } catch (error) {
+            throw new Error("Something went wrong");
+        } finally {
+            setLoading(false);
         }
-        setUser(null);
     }
 
     return (

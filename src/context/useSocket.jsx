@@ -30,17 +30,16 @@ function SocketProvider({ children }) {
                 setConnecting(false);
             };
 
-            ws.onclose = (s) => {
+            ws.onclose = () => {
                 if (connectionError) {
                     return;
                 }
                 toast.success("You got disconnected");
-                console.log("disconnected. ", s);
                 setSocket(null);
             };
 
-            ws.onerror = (error) => {
-                console.error("WebSocket error:", error);
+            ws.onerror = () => {
+                // console.error("WebSocket error:", error);
                 toast.error("Error while connecting to the Server");
                 setSocket(null);
                 connectionError = true;
