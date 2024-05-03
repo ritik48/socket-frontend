@@ -34,6 +34,23 @@ export function Game() {
         connectToServer(name);
     }, [connectToServer, name]);
 
+    function updateBoard(obj) {
+        setBoard((prev) => {
+            const newBoard = prev.map((row, rowIndex) => {
+                return row.map((cell, colIndex) => {
+                    if (rowIndex === obj.old_x && colIndex === obj.old_y) {
+                        return "0";
+                    }
+                    if (rowIndex === obj.cur_x && colIndex === obj.cur_y) {
+                        return obj.player;
+                    }
+                    return cell;
+                });
+            });
+            return newBoard;
+        });
+    }
+
     useEffect(() => {
         if (!socket) {
             return;
@@ -69,8 +86,7 @@ export function Game() {
                     // setMessage(message.payload.message);
                     break;
                 case MOVE:
-                    setBoard(message.payload.board);
-                    // setMessage(message.payload.message);
+                    updateBoard(message.payload);
                     break;
                 case GAME_OVER:
                     toast.success(message.payload.message);
@@ -126,7 +142,10 @@ export function Game() {
                         <h1 className="text-xl font-kanit text-white">
                             🕹️ Hey, {name}
                         </h1>
-                        <Link className="text-white hover:text-[#a09f9f]" to={"/"}>
+                        <Link
+                            className="text-white hover:text-[#a09f9f]"
+                            to={"/"}
+                        >
                             <RxExit size={20} />
                         </Link>
                     </div>
