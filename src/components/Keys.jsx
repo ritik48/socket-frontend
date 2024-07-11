@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useGame } from "../context/useGame";
 
 /* eslint-disable react/prop-types */
 const UP = "UP";
@@ -15,6 +16,8 @@ function useKeys(action) {
 }
 
 export function Keys({ socket }) {
+    const { gameState } = useGame();
+
     function handleKeyPress(e) {
         if (e.key === "w" || e.key === "ArrowUp") {
             handleMove(UP);
@@ -28,6 +31,10 @@ export function Keys({ socket }) {
     }
 
     function handleMove(direction) {
+        if (gameState === "stopped") {
+            console.log("game is stopped");
+            return;
+        }
         socket.send(
             JSON.stringify({
                 type: MOVE,

@@ -6,6 +6,7 @@ import { Keys } from "../components/Keys";
 import { useSocketContext } from "../context/useSocket";
 import { useUser } from "../context/useUser";
 import { Link } from "react-router-dom";
+import { useGame } from "../context/useGame";
 
 const INIT = "init";
 const MOVE = "move";
@@ -22,6 +23,9 @@ export function Game() {
 
     const { socket, connectToServer, connecting } = useSocketContext();
 
+    const { changeGameState, gameMessage, gameState, changeGameMessage } =
+        useGame();
+
     // const [message, setMessage] = useState("");
     const [opponent, setOpponent] = useState(null);
     const [waiting, setWaiting] = useState(false);
@@ -29,6 +33,7 @@ export function Game() {
 
     const [board, setBoard] = useState(null);
     const [squareSize, setSquareSize] = useState(null);
+    const [target, setTarget] = useState(null);
 
     useEffect(() => {
         connectToServer(name);
@@ -63,6 +68,7 @@ export function Game() {
         );
         socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
+            console.log("message = ", message);
 
             switch (message.type) {
                 case BOARD_SIZE:
@@ -75,9 +81,12 @@ export function Game() {
                     setWaiting(true);
                     break;
                 case ACTIVE:
+                    changeGameState("active");
+
                     setStarted(true);
                     setWaiting(false);
                     setBoard(message.payload.board);
+                    setTarget(message.payload.target);
                     // setSquareSize(message.payload.square_size);
                     setOpponent(message.payload.opponent);
                     toast.success(
@@ -88,11 +97,21 @@ export function Game() {
                 case MOVE:
                     updateBoard(message.payload);
                     break;
+                case "WIN":
+                    changeGameState("stopped");
+                    changeGameMessage(message.payload.message);
+
+                    console.log("Winning case");
+                    console.log(message);
+                    break;
                 case GAME_OVER:
                     toast.success(message.payload.message);
                     setBoard(message.payload.board);
                     setOpponent(null);
                     setWaiting(true);
+
+                    setTarget(null);
+                    changeGameState("active");
                     break;
                 // case ERROR:
                 //     toast.error(message.payload.message);
@@ -104,10 +123,29 @@ export function Game() {
             console.log("cleanup");
             socket.close();
         };
-    }, [socket]);
+    }, [socket, changeGameState, changeGameMessage]);
 
     return (
-        <div className="h-screen w-screen gap-2 justify-center items-center bg-[#1f1f1f] flex">
+        <div className="h-screen relative w-screen gap-2 justify-center items-center bg-[#1f1f1f] flex">
+            {gameState === "stopped" && (
+                <div className="absolute z-10 backdrop-blur-[2px] inset-0 flex justify-center items-center">
+                    <div className="w-[30%] bg-[#1f1f1f] p-6 flex flex-col justify-center items-center gap-4 border border-[#3a3a3a] rounded-xl">
+                        <p className="text-2xl text-gray-200">{gameMessage}</p>
+                        <button
+                            onClick={() => {
+                                socket.send(
+                                    JSON.stringify({
+                                        type: "RESET",
+                                    })
+                                );
+                            }}
+                            className="text-xl bg-green-600 text-white hover:bg-green-800 px-6 py-1 font-kanit rounded-md"
+                        >
+                            Play Again
+                        </button>
+                    </div>
+                </div>
+            )}
             <div className="m-4 p-4 shadow-md flex rounded-xl flex-wrap w-[20000px] h-[670px] bg-[#323248] ">
                 {socket &&
                     board &&
@@ -122,6 +160,13 @@ export function Game() {
                                     }}
                                     className={`flex m-1 justify-center items-center rounded-lg bg-[#141626]`}
                                 >
+                                    {item === "0" &&
+                                        i === target?.x &&
+                                        j === target?.y && (
+                                            <div
+                                                className={`w-2/3 h-2/3 rounded-lg ${"bg-yellow-400"}`}
+                                            ></div>
+                                        )}
                                     {item !== "0" && (
                                         <div
                                             className={`w-2/3 h-2/3 rounded-lg ${
